@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<customUI onLoad="Ribbon_OnLoad" xmlns="http://schemas.microsoft.com/office/2009/07/customui">
+  <ribbon>
+    <tabs>
+      <tab id="Jpp.MailAssistant.Explorer"
+           label="JPP">
+        <group label="Mail Assistant"
+               id="Jpp.MailAssistant.Explorer.Main">
+          <button id="MoveToShared"
+                  size="large"
+                  label="Move To Shared Folder"
+                  screentip="Move To Shared Folder"
+                  supertip="Move To Shared Folder"
+                  onAction="MoveToShared_OnAction"
+                  getImage="MoveToShared_GetImage"
+                  getVisible="MoveToShared_GetVisible"/>
+        </group>
+      </tab>
+    </tabs>
+    <contextualTabs>
+      <tabSet idMso="TabSetAttachments">
+        <tab idMso="TabAttachments">
+          <group label="Mail Assistant" id="Jpp.MailAssistant.Attachment">
+            <button id="SendToHub"
+                    size="large"
+                    label="Send To jHub"
+                    onAction="SendToHub_OnAction"
+                    getImage="SendToHub_GetImage"/>
+          </group>
+        </tab>
+      </tabSet>
+    </contextualTabs>
+  </ribbon>
+  <contextMenus>
+    <contextMenu idMso="ContextMenuMailItem">
+      <button id="MoveToSharedContextMenuMailItem"
+              label="Move To Shared Folder"
+              onAction="MoveToShared_OnAction"
+              getImage="MoveToShared_GetImage"
+              getVisible="MoveToShared_GetVisible"/>
+    </contextMenu>
+    <contextMenu idMso="ContextMenuMultipleItems">
+      <button id="MoveToSharedContextMenuMultipleItems"
+              label="Move To Shared Folder"
+              onAction="MoveToShared_OnAction"
+              getImage="MoveToShared_GetImage"
+              getVisible="MoveToShared_GetVisible"/>
+    </contextMenu>
+    <contextMenu idMso="ContextMenuAttachments">
+      <button id="SendToHubContextMenuAttachments"
+              label="Send To jHub"
+              onAction="SendToHub_OnAction" 
+              getImage="SendToHub_GetImage"/>
+    </contextMenu>
+  </contextMenus>
+</customUI>
+
+
