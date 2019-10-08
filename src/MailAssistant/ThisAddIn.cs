@@ -25,7 +25,7 @@ namespace Jpp.AddIn.MailAssistant
 
         private Outlook.Explorers _explorers;
         private Outlook.Inspectors _inspectors;
-        private IMessageProvider _messageProvider;
+        private MessageProvider _messageProvider;
 
         private static Outlook.Application _application;
 
@@ -57,6 +57,8 @@ namespace Jpp.AddIn.MailAssistant
 
             // Wire up event handlers to handle multiple Inspector windows
             _inspectors.NewInspector += OutlookEvent__Inspectors_NewInspector;
+
+            _messageProvider.ErrorOccurred += MessageProvider_OnErrorOccurred;
             
             // Add the ActiveExplorer to Windows
             var explorer = _application.ActiveExplorer();
@@ -66,6 +68,11 @@ namespace Jpp.AddIn.MailAssistant
             // Hook up event handlers for window
             window.Close += WrappedWindow_Close;
             window.InvalidateControl += WrappedWindow_InvalidateControl;
+        }
+
+        private  void MessageProvider_OnErrorOccurred(object sender, EventArgs e)
+        {
+            Authentication = new OfficeAddInOAuth(_messageProvider);
         }
 
         private void ThisAddIn_Shutdown(object sender, EventArgs e)
