@@ -25,7 +25,7 @@ namespace Jpp.AddIn.MailAssistant
 
         private Outlook.Explorers _explorers;
         private Outlook.Inspectors _inspectors;
-        private MessageProvider _messageProvider;
+        
 
         private static Outlook.Application _application;
 
@@ -34,7 +34,8 @@ namespace Jpp.AddIn.MailAssistant
         internal static Office.IRibbonUI Ribbon; // Ribbon UI reference
         internal static BaseOAuthAuthentication Authentication;
         internal static IStorageProvider StorageProvider;
-        
+        internal static MessageProvider MessageProvider;
+
         #endregion
 
         #region VSTO Startup and Shutdown methods
@@ -45,12 +46,12 @@ namespace Jpp.AddIn.MailAssistant
             _application = Application;
             _explorers = _application.Explorers;
             _inspectors = _application.Inspectors;
-            _messageProvider = new MessageProvider();
 
+            MessageProvider = new MessageProvider();
             Windows = new List<OutlookExplorer>();
             InspectorWindows = new List<OutlookInspector>();
             StorageProvider = new StorageProvider();
-            Authentication = new OfficeAddInOAuth(_messageProvider);
+            Authentication = new OfficeAddInOAuth(MessageProvider);
 
             // Wire up event handlers to handle multiple Explorer windows
             _explorers.NewExplorer += OutlookEvent_Explorers_NewExplorer;
@@ -58,7 +59,7 @@ namespace Jpp.AddIn.MailAssistant
             // Wire up event handlers to handle multiple Inspector windows
             _inspectors.NewInspector += OutlookEvent__Inspectors_NewInspector;
 
-            _messageProvider.ErrorOccurred += MessageProvider_OnErrorOccurred;
+            MessageProvider.ErrorOccurred += MessageProvider_OnErrorOccurred;
             
             // Add the ActiveExplorer to Windows
             var explorer = _application.ActiveExplorer();
@@ -72,7 +73,7 @@ namespace Jpp.AddIn.MailAssistant
 
         private  void MessageProvider_OnErrorOccurred(object sender, EventArgs e)
         {
-            Authentication = new OfficeAddInOAuth(_messageProvider);
+            Authentication = new OfficeAddInOAuth(MessageProvider);
         }
 
         private void ThisAddIn_Shutdown(object sender, EventArgs e)
@@ -174,6 +175,46 @@ namespace Jpp.AddIn.MailAssistant
 
             MessageBox.Show(stringBuilder.ToString(), @"Mail Assistant", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="folder"></param>
+        /// <param name="delete"></param>
+        internal static void MoveFolderContents(Outlook.Folder folder, bool delete)
+        {
+            if (folder == null) return;
+            using var form = new ProjectSelectFormHost();
+            var result = form.ShowDialog();
+
+            if (result != DialogResult.OK) return;
+
+            var sharedFolder= GetSharedFolder(form.SelectedFolders[0]);
+            if (sharedFolder == null) throw new ArgumentNullException(nameof(sharedFolder), @"No shared folder.");
+            foreach (var item in folder.Items)
+            {
+                if (item is Outlook.MailItem mail)
+                {
+                    mail.Move(sharedFolder);
+                }
+            }
+
+            if (delete) folder.Delete();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        internal static void NewFolder()
+        {
+            using var form = new ProjectSelectFormHost();
+            var result = form.ShowDialog();
+
+            if (result != DialogResult.OK) return;
+
+            var _ = GetSharedFolder(form.SelectedFolders[0]);
+        }
+
 
         /// <summary>
         /// 

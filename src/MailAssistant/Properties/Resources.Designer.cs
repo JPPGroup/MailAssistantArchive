@@ -63,6 +63,16 @@ namespace Jpp.AddIn.MailAssistant.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap MoveFolderToShared_Small {
+            get {
+                object obj = ResourceManager.GetObject("MoveFolderToShared_Small", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap MoveToShared_Large {
             get {
                 object obj = ResourceManager.GetObject("MoveToShared_Large", resourceCulture);
@@ -76,6 +86,16 @@ namespace Jpp.AddIn.MailAssistant.Properties {
         internal static System.Drawing.Bitmap MoveToShared_Small {
             get {
                 object obj = ResourceManager.GetObject("MoveToShared_Small", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap NewSharedFolder_Large {
+            get {
+                object obj = ResourceManager.GetObject("NewSharedFolder_Large", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

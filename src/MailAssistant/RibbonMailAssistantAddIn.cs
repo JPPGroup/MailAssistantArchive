@@ -94,6 +94,27 @@ namespace Jpp.AddIn.MailAssistant
                 _ => null
             };
 
+        public void MoveFolderToSharedFolder_OnAction(Office.IRibbonControl control)
+        {
+            var folder = control.Context as Outlook.Folder;
+            ThisAddIn.MoveFolderContents(folder, true);
+        }
+
+        public Bitmap MoveFolderToSharedFolder_GetImage(Office.IRibbonControl control)
+        {
+            return Resources.MoveFolderToShared_Small;
+        }
+
+        public void NewFolder_OnAction(Office.IRibbonControl control)
+        {
+            ThisAddIn.NewFolder();
+        }
+
+        public Bitmap NewFolder_GetImage(Office.IRibbonControl control)
+        {
+            return Resources.NewSharedFolder_Large;
+        }
+
         #endregion
 
         #region Helpers

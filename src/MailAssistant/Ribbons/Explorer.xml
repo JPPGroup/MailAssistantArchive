@@ -8,12 +8,19 @@
                id="Jpp.MailAssistant.Explorer.Main">
           <button id="MoveToShared"
                   size="large"
-                  label="Move To Shared Folder"
-                  screentip="Move To Shared Folder"
-                  supertip="Move To Shared Folder"
+                  label="Move Mail Item To Shared Folder"
+                  screentip="Move Mail Item To Shared Folder"
+                  supertip="Move Mail Item To Shared Folder"
                   onAction="MoveToShared_OnAction"
                   getImage="MoveToShared_GetImage"
                   getVisible="MoveToShared_GetVisible"/>
+          <button id="NewFolder"
+                  size="large"
+                  label="New Shared Folder"
+                  screentip="Create new shared folder"
+                  supertip="Create new shared folder"
+                  onAction="NewFolder_OnAction"
+                  getImage="NewFolder_GetImage"/>
         </group>
       </tab>
     </tabs>
@@ -23,7 +30,7 @@
           <group label="Mail Assistant" id="Jpp.MailAssistant.Attachment">
             <button id="SendToHub"
                     size="large"
-                    label="Send To jHub"
+                    label="Send Attachment To jHub"
                     onAction="SendToHub_OnAction"
                     getImage="SendToHub_GetImage"/>
           </group>
@@ -34,23 +41,29 @@
   <contextMenus>
     <contextMenu idMso="ContextMenuMailItem">
       <button id="MoveToSharedContextMenuMailItem"
-              label="Move To Shared Folder"
+              label="Move Mail Item To Shared Folder"
               onAction="MoveToShared_OnAction"
               getImage="MoveToShared_GetImage"
               getVisible="MoveToShared_GetVisible"/>
     </contextMenu>
     <contextMenu idMso="ContextMenuMultipleItems">
       <button id="MoveToSharedContextMenuMultipleItems"
-              label="Move To Shared Folder"
+              label="Move Mail Items To Shared Folder"
               onAction="MoveToShared_OnAction"
               getImage="MoveToShared_GetImage"
               getVisible="MoveToShared_GetVisible"/>
     </contextMenu>
     <contextMenu idMso="ContextMenuAttachments">
       <button id="SendToHubContextMenuAttachments"
-              label="Send To jHub"
+              label="Send Attachment To jHub"
               onAction="SendToHub_OnAction" 
               getImage="SendToHub_GetImage"/>
+    </contextMenu>
+    <contextMenu idMso="ContextMenuFolder">
+      <button id="MoveFolderToSharedFolder" 
+              label="Move Folder To Shared Folder"
+              onAction="MoveFolderToSharedFolder_OnAction"
+              getImage="MoveFolderToSharedFolder_GetImage"/>
     </contextMenu>
   </contextMenus>
 </customUI>

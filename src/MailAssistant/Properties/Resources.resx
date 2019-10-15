@@ -118,11 +118,17 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="MoveFolderToShared_Small" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Images\MoveFolderToShared_Small.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="MoveToShared_Large" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Images\MoveToShared_Large.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="MoveToShared_Small" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Images\MoveToShared_Small.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="NewSharedFolder_Large" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Images\NewSharedFolder_Large.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="SendToHub_Large" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Images\SendToHub_Large.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
