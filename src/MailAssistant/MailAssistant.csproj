@@ -34,7 +34,7 @@
     <PublishUrl>..\..\dist\</PublishUrl>
     <InstallUrl>https://jppcdnstorage.blob.core.windows.net/mail-assistant/</InstallUrl>
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>1.0.0.5</ApplicationVersion>
+    <ApplicationVersion>1.0.0.6</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>7</UpdateInterval>
@@ -340,7 +340,12 @@
   <ItemGroup>
     <None Include="Images\SendToHub_Small.png" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="Images\MoveFolderToShared_Small.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Images\NewSharedFolder_Large.png" />
+  </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>

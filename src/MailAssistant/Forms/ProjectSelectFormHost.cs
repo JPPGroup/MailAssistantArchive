@@ -14,6 +14,7 @@ namespace Jpp.AddIn.MailAssistant.Forms
             InitializeComponent();
 
             if (!(elementHost.Child is ProjectSelectView ctr)) return;
+            ctr.FormsWindow = this;
 
             var vm = (ProjectSelectViewModel)ctr.DataContext;
             vm.Host = this;
