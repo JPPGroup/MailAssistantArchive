@@ -11,12 +11,12 @@ pool:
 
 variables:
 - group: Cert
-- name: 'solution'
-  value:'**/*.sln'
+- name: solution
+  value: '**/*.sln'
 - name: buildPlatform
   value: 'Any CPU'
 - name: buildConfiguration
-  group: 'Release'
+  value: 'Release'
 
 steps:
 - task: NuGetToolInstaller@1
