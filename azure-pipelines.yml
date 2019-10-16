@@ -10,12 +10,38 @@ pool:
   vmImage: 'windows-latest'
 
 variables:
-  solution: '**/*.sln'
-  buildPlatform: 'Any CPU'
-  buildConfiguration: 'Release'
+- group: Cert
+- name: solution
+  value:'**/*.sln'
+- name: buildPlatform
+  value: 'Any CPU'
+- name: buildConfiguration
+  group: 'Release'
 
 steps:
 - task: NuGetToolInstaller@1
+
+- task: DownloadSecureFile@1
+  name: signingCert
+  displayName: 'Download CA certificate'
+  inputs:
+    secureFile: 'SigningCert.pfx'
+
+- task: PowerShell@2
+  displayName: 'Install Certificate'
+  inputs:
+    targetType: 'inline'
+    script: |
+      $pfxpath = '$(signingCert.secureFilePath)'
+      $password = '$(CertificatePassword)'
+      
+      Add-Type -AssemblyName System.Security
+      $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
+      $cert.Import($pfxpath, $password, [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]"PersistKeySet")
+      $store = new-object system.security.cryptography.X509Certificates.X509Store -argumentlist "MY", CurrentUser
+      $store.Open([System.Security.Cryptography.X509Certificates.OpenFlags]"ReadWrite")
+      $store.Add($cert)
+      $store.Close()
 
 - task: NuGetCommand@2
   inputs:
