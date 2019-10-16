@@ -11,7 +11,7 @@ pool:
 
 variables:
 - group: Cert
-- name: solution
+- name: 'solution'
   value:'**/*.sln'
 - name: buildPlatform
   value: 'Any CPU'
