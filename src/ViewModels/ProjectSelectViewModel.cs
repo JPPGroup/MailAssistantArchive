@@ -4,8 +4,8 @@ using Jpp.Common.Backend;
 using Jpp.Common.Backend.Auth;
 using Jpp.Common.Backend.Projects;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Forms;
@@ -17,7 +17,6 @@ namespace Jpp.AddIn.MailAssistant.ViewModels
     {
         private readonly BaseOAuthAuthentication _authentication;
         private readonly Projects _projectService;
-        private ObservableCollection<ProjectModel> _projectList;
         private ICommand _cancelCommand;
         private ICommand _okCommand;
         private string _searchText;
@@ -55,10 +54,6 @@ namespace Jpp.AddIn.MailAssistant.ViewModels
         }
         public Visibility SearchBackgroundVisible => string.IsNullOrWhiteSpace(SearchText) ? Visibility.Visible : Visibility.Hidden;
         public ProjectSelectFormHost Host { get; set; }
-        public ObservableCollection<ProjectModel> ProjectList {
-            get => _projectList;
-            set => SetField(ref _projectList, value, nameof(ProjectList));
-        }
         public ICommand CancelCommand => _cancelCommand ??= new DelegateCommand(DoCancel);
         public ICommand OkCommand => _okCommand ??= new DelegateCommand(DoOk);
 
@@ -86,10 +81,10 @@ namespace Jpp.AddIn.MailAssistant.ViewModels
         {
             if (!_authentication.Authenticated) await _authentication.Authenticate();
 
-            ProjectList = new ObservableCollection<ProjectModel>(await _projectService.GetAllProjects());
-            ProjectsView = new ListCollectionView(_projectList);
-            ProjectsView.SortDescriptions.Add(new SortDescription("Code", ListSortDirection.Descending));
-
+            var result = await _projectService.GetAllProjects();
+            var list = result.OrderByDescending(p => p.Code, new ProjectCodeComparer()).ToList();
+            
+            ProjectsView = new ListCollectionView(list);
             SelectedProject = null;
         }
     }

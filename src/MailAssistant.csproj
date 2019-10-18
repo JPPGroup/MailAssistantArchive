@@ -134,7 +134,7 @@
       <HintPath>..\packages\Jpp.Common.Backend.0.1.21\lib\netstandard2.0\Backend.dll</HintPath>
     </Reference>
     <Reference Include="Common, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Jpp.Common.0.1.6.11\lib\netstandard2.0\Common.dll</HintPath>
+      <HintPath>..\packages\Jpp.Common.0.2.10\lib\netstandard2.0\Common.dll</HintPath>
     </Reference>
     <Reference Include="DocumentFormat.OpenXml, Version=2.9.1.0, Culture=neutral, PublicKeyToken=8fb06cb64d019a17, processorArchitecture=MSIL">
       <HintPath>..\packages\DocumentFormat.OpenXml.2.9.1\lib\net46\DocumentFormat.OpenXml.dll</HintPath>
@@ -157,6 +157,7 @@
     <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Buffers.4.5.0\lib\netstandard2.0\System.Buffers.dll</HintPath>
     </Reference>
+    <Reference Include="System.Data" />
     <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.IO.FileSystem.Primitives, Version=4.0.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
@@ -245,6 +246,12 @@
     <Compile Include="Forms\LogInFormHost.Designer.cs">
       <DependentUpon>LogInFormHost.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\ProgressForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\ProgressForm.Designer.cs">
+      <DependentUpon>ProgressForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\ProjectSelectFormHost.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -273,6 +280,9 @@
     </Compile>
     <EmbeddedResource Include="Forms\LogInFormHost.resx">
       <DependentUpon>LogInFormHost.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\ProgressForm.resx">
+      <DependentUpon>ProgressForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\ProjectSelectFormHost.resx">
       <DependentUpon>ProjectSelectFormHost.cs</DependentUpon>

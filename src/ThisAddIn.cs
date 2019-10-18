@@ -3,10 +3,12 @@ using Jpp.Common.Backend;
 using Jpp.Common.Backend.Auth;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
+using DocumentFormat.OpenXml.Office.Word;
 using Jpp.AddIn.MailAssistant.Forms;
 using Office = Microsoft.Office.Core;
 using Outlook = Microsoft.Office.Interop.Outlook;
@@ -181,7 +183,7 @@ namespace Jpp.AddIn.MailAssistant
         /// </summary>
         /// <param name="folder"></param>
         /// <param name="delete"></param>
-        internal static void MoveFolderContents(Outlook.Folder folder, bool delete)
+        internal static void MoveFolderContents(Outlook.Folder folder)
         {
             if (folder == null) return;
             using var form = new ProjectSelectFormHost();
@@ -189,17 +191,10 @@ namespace Jpp.AddIn.MailAssistant
 
             if (result != DialogResult.OK) return;
 
-            var sharedFolder= GetSharedFolder(form.SelectedFolders[0]);
+            var sharedFolder = GetSharedFolder(form.SelectedFolders[0]);
             if (sharedFolder == null) throw new ArgumentNullException(nameof(sharedFolder), @"No shared folder.");
-            foreach (var item in folder.Items)
-            {
-                if (item is Outlook.MailItem mail)
-                {
-                    mail.Move(sharedFolder);
-                }
-            }
 
-            if (delete) folder.Delete();
+            ProcessFolder(folder, sharedFolder);
         }
 
         /// <summary>
@@ -214,7 +209,6 @@ namespace Jpp.AddIn.MailAssistant
 
             var _ = GetSharedFolder(form.SelectedFolders[0]);
         }
-
 
         /// <summary>
         /// 
@@ -299,6 +293,8 @@ namespace Jpp.AddIn.MailAssistant
 
             for (var i = 0; i <= arrFolders.GetUpperBound(0); i++)
             {
+                if(string.IsNullOrWhiteSpace(arrFolders[i]) || folder.Name == arrFolders[i]) continue;
+
                 var colFolders = folder.Folders;
                 var nextFolder = GetFolder(colFolders, arrFolders[i]) ?? CreateFolder(folder, arrFolders[i]);
 
@@ -334,7 +330,7 @@ namespace Jpp.AddIn.MailAssistant
                 folderItems = folder.Items;
                 resultItems = folderItems.Restrict(restrictCriteria);
                 item = resultItems.GetFirst();
-
+                
                 while (item != null)
                 {
                     if (item is Outlook.MailItem mailItem)
@@ -371,6 +367,81 @@ namespace Jpp.AddIn.MailAssistant
             {
                 return "";
             }
+        }
+
+        private static void ProcessFolder(Outlook.Folder folder, Outlook.Folder sharedFolder)
+        {
+            while (folder.Folders.Count > 0)
+            {
+                var child = folder.Folders.GetFirst();
+                if (child is Outlook.Folder childFolder)
+                {
+                    var parentPath = sharedFolder.FullFolderPath;
+                    var childName = childFolder.Name;
+                    var childShared = GetSharedFolder($"{parentPath}\\{childName}");
+                    ProcessFolder(childFolder, childShared);
+                }
+
+                Marshal.ReleaseComObject(child);
+            }
+
+            DoFolderMoveWithModal(progress => DoFolderMove(progress, folder, sharedFolder), folder);
+
+            if (folder.Items.Count == 0) folder.Delete();
+
+            Marshal.ReleaseComObject(folder);
+            Marshal.ReleaseComObject(sharedFolder);
+        }
+
+        private static void DoFolderMove(IProgress<int> progress, Outlook.Folder folder, Outlook.Folder sharedFolder)
+        {
+            var count = 1;
+
+            for (var i = folder.Items.Count; i > 0; i--)
+            {
+                var item = folder.Items[i];
+                progress?.Report(count);
+                switch (item)
+                {
+                    case Outlook.MailItem mailItem:
+                        mailItem.Move(sharedFolder);
+                        break;
+                    case Outlook.MeetingItem meetingItem:
+                        meetingItem.Move(sharedFolder);
+                        break;
+                    case Outlook.ReportItem reportItem:
+                        reportItem.Move(sharedFolder);
+                        break;
+                }
+
+                Marshal.ReleaseComObject(item);
+                count++;
+            }
+        }
+
+        private static void DoFolderMoveWithModal(Action<IProgress<int>> work, Outlook.Folder folder)
+        {
+            var frm = new ProgressForm
+            {
+                progressBar = { Maximum = folder.Items.Count }, 
+                Text = $@"Moving '{folder.Name}'..."
+            };
+
+            frm.Shown += (_, args) =>
+            {
+                var worker = new BackgroundWorker();
+
+                var progress = new Progress<int>(i =>
+                {
+                    frm.progressBar.Value = i;
+                    frm.lblProgress.Text = $"{frm.progressBar.Value} of {frm.progressBar.Maximum}";
+                });
+                worker.DoWork += (s, workerArgs) => work(progress);
+                worker.RunWorkerCompleted += (s, workerArgs) => frm.Close();
+                worker.RunWorkerAsync();
+            };
+
+            frm.ShowDialog();
         }
 
         #endregion

@@ -97,7 +97,7 @@ namespace Jpp.AddIn.MailAssistant
         public void MoveFolderToSharedFolder_OnAction(Office.IRibbonControl control)
         {
             var folder = control.Context as Outlook.Folder;
-            ThisAddIn.MoveFolderContents(folder, true);
+            ThisAddIn.MoveFolderContents(folder);
         }
 
         public Bitmap MoveFolderToSharedFolder_GetImage(Office.IRibbonControl control)
