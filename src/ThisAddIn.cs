@@ -8,6 +8,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
+using DocumentFormat.OpenXml.Bibliography;
 using DocumentFormat.OpenXml.Office.Word;
 using Jpp.AddIn.MailAssistant.Forms;
 using Office = Microsoft.Office.Core;
@@ -182,7 +183,6 @@ namespace Jpp.AddIn.MailAssistant
         /// 
         /// </summary>
         /// <param name="folder"></param>
-        /// <param name="delete"></param>
         internal static void MoveFolderContents(Outlook.Folder folder)
         {
             if (folder == null) return;
@@ -301,12 +301,27 @@ namespace Jpp.AddIn.MailAssistant
                 folder = nextFolder;
             }
 
+            if (folder.Name != arrFolders.Last()) folder.Name = arrFolders.Last();
+
             return folder;
         }
 
         private static Outlook.Folder GetFolder(Outlook.Folders folders, string folderName)
         {
-            return folders.Cast<Outlook.Folder>().FirstOrDefault(folder => folder.Name == folderName);
+            return folders.Cast<Outlook.Folder>().FirstOrDefault(folder => folder.Name == folderName || CheckFolderForCode(folder.Name, folderName));
+        }
+
+        private static bool CheckFolderForCode(string folderName, string matchName)
+        {
+            const string find = "-";
+
+            var charFolderLoc = folderName.IndexOf(find, StringComparison.Ordinal);
+            var charMatchLoc = matchName.IndexOf(find, StringComparison.Ordinal);
+
+            if (charFolderLoc <= 0 || charMatchLoc <= 0) return false;
+            if (charFolderLoc != charMatchLoc) return false;
+
+            return folderName.Substring(0, charFolderLoc) == matchName.Substring(0, charMatchLoc);
         }
 
         private static Outlook.Folder CreateFolder(Outlook.Folder rootFolder, string folderName)
@@ -434,7 +449,7 @@ namespace Jpp.AddIn.MailAssistant
                 var progress = new Progress<int>(i =>
                 {
                     frm.progressBar.Value = i;
-                    frm.lblProgress.Text = $"{frm.progressBar.Value} of {frm.progressBar.Maximum}";
+                    frm.lblProgress.Text = $@"{frm.progressBar.Value} of {frm.progressBar.Maximum}";
                 });
                 worker.DoWork += (s, workerArgs) => work(progress);
                 worker.RunWorkerCompleted += (s, workerArgs) => frm.Close();
