@@ -1,4 +1,5 @@
 ﻿using Jpp.AddIn.MailAssistant.Backend;
+using Jpp.AddIn.MailAssistant.Forms;
 using Jpp.Common.Backend;
 using Jpp.Common.Backend.Auth;
 using System;
@@ -8,9 +9,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
-using DocumentFormat.OpenXml.Bibliography;
-using DocumentFormat.OpenXml.Office.Word;
-using Jpp.AddIn.MailAssistant.Forms;
 using Office = Microsoft.Office.Core;
 using Outlook = Microsoft.Office.Interop.Outlook;
 
@@ -143,40 +141,49 @@ namespace Jpp.AddIn.MailAssistant
         {
             if (selection == null || selection.Count < 1) return;
 
-            using var form = new ProjectSelectFormHost();
-            var result = form.ShowDialog();
+            using var frm = new ProjectListForm(Authentication, StorageProvider);
+            var result = frm.ShowDialog();
 
             if (result != DialogResult.OK) return;
 
-            var folder = GetSharedFolder(form.SelectedFolders[0]);
-            if(folder == null) throw new ArgumentNullException(nameof(folder), @"No shared folder.");
+            var folder = GetSharedFolder(frm.SelectedFolder);
+            if (folder == null) throw new ArgumentNullException(nameof(folder), @"No shared folder.");
 
-            var duplicates = new List<string>();
-            foreach (var item in selection)
+            try
             {
-                if (item is Outlook.MailItem mail)
+                var duplicates = new List<string>();
+                foreach (var item in selection)
                 {
-                    if (IsDuplicateInFolder(folder, mail))
+                    if (item is Outlook.MailItem mail)
                     {
-                        duplicates.Add(mail.Subject);
-                        continue;
+                        if (IsDuplicateInFolder(folder, mail))
+                        {
+                            duplicates.Add(mail.Subject);
+                            continue;
+                        }
+
+                        mail.Move(folder);
+                        //TODO: Log analytics  
                     }
 
-                    mail.Move(folder);
-                    //TODO: Log analytics  
+                    Marshal.ReleaseComObject(item);
                 }
-            }
 
-            if (!duplicates.Any()) return;
-            
-            var stringBuilder = new StringBuilder();
-            stringBuilder.Append("The following items where already present in the folder: \n");
-            foreach (var item in duplicates)
+                if (!duplicates.Any()) return;
+
+                var stringBuilder = new StringBuilder();
+                stringBuilder.Append("The following items where already present in the folder: \n");
+                foreach (var item in duplicates)
+                {
+                    stringBuilder.AppendLine($"\n{item}");
+                }
+
+                MessageBox.Show(stringBuilder.ToString(), @"Mail Assistant", MessageBoxButtons.OK,MessageBoxIcon.Information);
+            }
+            finally
             {
-                stringBuilder.AppendLine($"\n{item}");
+                Marshal.ReleaseComObject(folder);
             }
-
-            MessageBox.Show(stringBuilder.ToString(), @"Mail Assistant", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         /// <summary>
@@ -186,12 +193,12 @@ namespace Jpp.AddIn.MailAssistant
         internal static void MoveFolderContents(Outlook.Folder folder)
         {
             if (folder == null) return;
-            using var form = new ProjectSelectFormHost();
-            var result = form.ShowDialog();
+            using var frm = new ProjectListForm(Authentication, StorageProvider);
+            var result = frm.ShowDialog();
 
             if (result != DialogResult.OK) return;
 
-            var sharedFolder = GetSharedFolder(form.SelectedFolders[0]);
+            var sharedFolder = GetSharedFolder(frm.SelectedFolder);
             if (sharedFolder == null) throw new ArgumentNullException(nameof(sharedFolder), @"No shared folder.");
 
             ProcessFolder(folder, sharedFolder);
@@ -202,12 +209,12 @@ namespace Jpp.AddIn.MailAssistant
         /// </summary>
         internal static void NewFolder()
         {
-            using var form = new ProjectSelectFormHost();
-            var result = form.ShowDialog();
+            using var frm = new ProjectListForm(Authentication, StorageProvider);
+            var result = frm.ShowDialog();
 
             if (result != DialogResult.OK) return;
 
-            var _ = GetSharedFolder(form.SelectedFolders[0]);
+            var _ = GetSharedFolder(frm.SelectedFolder);
         }
 
         /// <summary>
