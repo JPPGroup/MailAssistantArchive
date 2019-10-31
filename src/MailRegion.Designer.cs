@@ -41,7 +41,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Name = "MailRegion";
-            this.Size = new System.Drawing.Size(724, 150);
+            this.Size = new System.Drawing.Size(724, 56);
             this.FormRegionShowing += new System.EventHandler(this.MailRegion_FormRegionShowing);
             this.FormRegionClosed += new System.EventHandler(this.MailRegion_FormRegionClosed);
             this.ResumeLayout(false);
@@ -61,6 +61,7 @@
             manifest.FormRegionName = "Mail Assistant";
             manifest.FormRegionType = Microsoft.Office.Tools.Outlook.FormRegionType.Adjoining;
             manifest.ShowInspectorCompose = false;
+
         }
 
         #endregion

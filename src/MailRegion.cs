@@ -20,6 +20,7 @@ namespace Jpp.AddIn.MailAssistant
             // Use e.OutlookItem to get a reference to the current Outlook item.
             private void MailRegionFactory_FormRegionInitializing(object sender, Microsoft.Office.Tools.Outlook.FormRegionInitializingEventArgs e)
             {
+                e.Cancel = true;
             }
         }
 

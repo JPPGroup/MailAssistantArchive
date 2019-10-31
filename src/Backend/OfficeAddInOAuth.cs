@@ -10,14 +10,14 @@ namespace Jpp.AddIn.MailAssistant.Backend
 
         public override void AuthenticationPrompt()
         {
-            using var form = new LogInFormHost(GetAuthenticationURL());
-            form.ShowDialog();
+            using var frm = new LoginForm(this, GetAuthenticationURL());
+            frm.ShowDialog();
         }
 
         public override void ExpirePrompt()
         {
-            using var form = new LogInFormHost(GetExpireURL());
-            form.ShowDialog();
+            using var frm = new LoginForm(this, GetExpireURL());
+            frm.ShowDialog();
         }
     }
 }

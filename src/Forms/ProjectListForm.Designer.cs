@@ -32,9 +32,10 @@
             this.btnOk = new System.Windows.Forms.Button();
             this.txtSearchBox = new System.Windows.Forms.TextBox();
             this.panMain = new System.Windows.Forms.Panel();
-            this.lstProjects = new System.Windows.Forms.ListView();
             this.lblSearch = new System.Windows.Forms.Label();
+            this.gridProjects = new System.Windows.Forms.DataGridView();
             this.panMain.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.gridProjects)).BeginInit();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -70,26 +71,13 @@
             // 
             this.panMain.BackColor = System.Drawing.Color.White;
             this.panMain.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panMain.Controls.Add(this.gridProjects);
             this.panMain.Controls.Add(this.lblSearch);
-            this.panMain.Controls.Add(this.lstProjects);
             this.panMain.Controls.Add(this.txtSearchBox);
             this.panMain.Location = new System.Drawing.Point(12, 12);
             this.panMain.Name = "panMain";
             this.panMain.Size = new System.Drawing.Size(754, 355);
             this.panMain.TabIndex = 4;
-            // 
-            // lstProjects
-            // 
-            this.lstProjects.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.lstProjects.FullRowSelect = true;
-            this.lstProjects.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
-            this.lstProjects.HideSelection = false;
-            this.lstProjects.Location = new System.Drawing.Point(14, 38);
-            this.lstProjects.MultiSelect = false;
-            this.lstProjects.Name = "lstProjects";
-            this.lstProjects.Size = new System.Drawing.Size(724, 300);
-            this.lstProjects.TabIndex = 4;
-            this.lstProjects.UseCompatibleStateImageBehavior = false;
             // 
             // lblSearch
             // 
@@ -99,6 +87,22 @@
             this.lblSearch.Size = new System.Drawing.Size(47, 13);
             this.lblSearch.TabIndex = 5;
             this.lblSearch.Text = "Search :";
+            // 
+            // gridProjects
+            // 
+            this.gridProjects.AllowUserToAddRows = false;
+            this.gridProjects.AllowUserToDeleteRows = false;
+            this.gridProjects.AllowUserToResizeRows = false;
+            this.gridProjects.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.gridProjects.Location = new System.Drawing.Point(14, 38);
+            this.gridProjects.MultiSelect = false;
+            this.gridProjects.Name = "gridProjects";
+            this.gridProjects.ReadOnly = true;
+            this.gridProjects.RowHeadersVisible = false;
+            this.gridProjects.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.gridProjects.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.gridProjects.Size = new System.Drawing.Size(724, 298);
+            this.gridProjects.TabIndex = 7;
             // 
             // ProjectListForm
             // 
@@ -123,6 +127,7 @@
             this.Load += new System.EventHandler(this.ProjectListForm_Load);
             this.panMain.ResumeLayout(false);
             this.panMain.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.gridProjects)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -133,7 +138,7 @@
         private System.Windows.Forms.Button btnOk;
         private System.Windows.Forms.TextBox txtSearchBox;
         private System.Windows.Forms.Panel panMain;
-        private System.Windows.Forms.ListView lstProjects;
         private System.Windows.Forms.Label lblSearch;
+        private System.Windows.Forms.DataGridView gridProjects;
     }
 }

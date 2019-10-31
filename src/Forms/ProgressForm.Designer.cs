@@ -44,9 +44,9 @@
             this.lblProgress.AutoSize = true;
             this.lblProgress.Location = new System.Drawing.Point(13, 47);
             this.lblProgress.Name = "lblProgress";
-            this.lblProgress.Size = new System.Drawing.Size(16, 13);
+            this.lblProgress.Size = new System.Drawing.Size(69, 13);
             this.lblProgress.TabIndex = 1;
-            this.lblProgress.Text = "...";
+            this.lblProgress.Text = "...please wait";
             // 
             // ProgressForm
             // 

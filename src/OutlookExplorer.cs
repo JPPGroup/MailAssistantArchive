@@ -44,6 +44,7 @@ namespace Jpp.AddIn.MailAssistant
         private void Window_SelectionChange()
         {
             RaiseInvalidateControl("MoveToShared");
+            RaiseInvalidateControl("MoveFolderToSharedFolder");
             RaiseInvalidateControl("MoveToSharedContextMenuMailItem");
             RaiseInvalidateControl("MoveToSharedContextMenuMultipleItems");
         }

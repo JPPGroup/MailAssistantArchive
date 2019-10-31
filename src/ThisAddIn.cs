@@ -1,14 +1,12 @@
 ﻿using Jpp.AddIn.MailAssistant.Backend;
-using Jpp.AddIn.MailAssistant.Forms;
 using Jpp.Common.Backend;
 using Jpp.Common.Backend.Auth;
+using Microsoft.AppCenter;
+using Microsoft.AppCenter.Analytics;
+using Microsoft.AppCenter.Crashes;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Windows.Forms;
+using Jpp.AddIn.MailAssistant.Wrappers;
 using Office = Microsoft.Office.Core;
 using Outlook = Microsoft.Office.Interop.Outlook;
 
@@ -16,19 +14,11 @@ namespace Jpp.AddIn.MailAssistant
 {
     public partial class ThisAddIn
     {
-        private const string BASE_SHARED_FOLDER_NAME = "JPP_Shared";
-        private const string NAMESPACE_TYPE = "MAPI";
-        private const int SEARCH_WINDOW_MINUTES = 2;
-        private const string PR_INTERNET_MESSAGE_ID = "http://schemas.microsoft.com/mapi/proptag/0x1035001E";
-        private const string SEARCH_DATE_FORMAT = "dd MMMM yyyy h:mm tt";
-
         #region Instance Variables
 
         private Outlook.Explorers _explorers;
         private Outlook.Inspectors _inspectors;
-        
-
-        private static Outlook.Application _application;
+        private AppDeploymentCheck _appCheck;
 
         internal static List<OutlookExplorer> Windows;  // List of tracked explorer windows  
         internal static List<OutlookInspector> InspectorWindows; // List of tracked inspector windows         
@@ -43,10 +33,21 @@ namespace Jpp.AddIn.MailAssistant
 
         private void ThisAddIn_Startup(object sender, EventArgs e)
         {
+            // Start AppCenter
+            AppCenter.Start("85ffea91-fbef-4cdf-9e69-ac7c15e3a683", typeof(Analytics), typeof(Crashes));
+            //TODO: check if these are to be set before or after start.
+            Analytics.SetEnabledAsync(true);
+            Crashes.SetEnabledAsync(true);
+
+            using (var user = new AddressEntryWrapper(Application.Session.CurrentUser.AddressEntry))
+            {
+                AppCenter.SetUserId(user.Address);
+            }
+
             // Initialize variables
-            _application = Application;
-            _explorers = _application.Explorers;
-            _inspectors = _application.Inspectors;
+            _explorers = Application.Explorers;
+            _inspectors = Application.Inspectors;
+            _appCheck = new AppDeploymentCheck();
 
             MessageProvider = new MessageProvider();
             Windows = new List<OutlookExplorer>();
@@ -63,18 +64,13 @@ namespace Jpp.AddIn.MailAssistant
             MessageProvider.ErrorOccurred += MessageProvider_OnErrorOccurred;
             
             // Add the ActiveExplorer to Windows
-            var explorer = _application.ActiveExplorer();
+            var explorer = Application.ActiveExplorer();
             var window = new OutlookExplorer(explorer);
             Windows.Add(window);
             
             // Hook up event handlers for window
             window.Close += WrappedWindow_Close;
             window.InvalidateControl += WrappedWindow_InvalidateControl;
-        }
-
-        private  void MessageProvider_OnErrorOccurred(object sender, EventArgs e)
-        {
-            Authentication = new OfficeAddInOAuth(MessageProvider);
         }
 
         private void ThisAddIn_Shutdown(object sender, EventArgs e)
@@ -84,6 +80,8 @@ namespace Jpp.AddIn.MailAssistant
             _inspectors.NewInspector -= OutlookEvent__Inspectors_NewInspector;
 
             // Dereference objects
+            _appCheck.Dispose();
+            _appCheck = null;
             _explorers = null;
             _inspectors = null;
             Windows.Clear();
@@ -91,12 +89,11 @@ namespace Jpp.AddIn.MailAssistant
             InspectorWindows.Clear();
             InspectorWindows = null;
             Ribbon = null;
-            _application = null;
         }
 
         protected override Office.IRibbonExtensibility CreateRibbonExtensibilityObject()
         {
-            return new RibbonMailAssistantAddIn(_application);
+            return new RibbonMailAssistantAddIn();
         }
 
         #endregion
@@ -132,100 +129,7 @@ namespace Jpp.AddIn.MailAssistant
 
             return null;
         }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="selection"></param>
-        internal static void MoveMail(Outlook.Selection selection)
-        {
-            if (selection == null || selection.Count < 1) return;
-
-            using var frm = new ProjectListForm(Authentication, StorageProvider);
-            var result = frm.ShowDialog();
-
-            if (result != DialogResult.OK) return;
-
-            var folder = GetSharedFolder(frm.SelectedFolder);
-            if (folder == null) throw new ArgumentNullException(nameof(folder), @"No shared folder.");
-
-            try
-            {
-                var duplicates = new List<string>();
-                foreach (var item in selection)
-                {
-                    if (item is Outlook.MailItem mail)
-                    {
-                        if (IsDuplicateInFolder(folder, mail))
-                        {
-                            duplicates.Add(mail.Subject);
-                            continue;
-                        }
-
-                        mail.Move(folder);
-                        //TODO: Log analytics  
-                    }
-
-                    Marshal.ReleaseComObject(item);
-                }
-
-                if (!duplicates.Any()) return;
-
-                var stringBuilder = new StringBuilder();
-                stringBuilder.Append("The following items where already present in the folder: \n");
-                foreach (var item in duplicates)
-                {
-                    stringBuilder.AppendLine($"\n{item}");
-                }
-
-                MessageBox.Show(stringBuilder.ToString(), @"Mail Assistant", MessageBoxButtons.OK,MessageBoxIcon.Information);
-            }
-            finally
-            {
-                Marshal.ReleaseComObject(folder);
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="folder"></param>
-        internal static void MoveFolderContents(Outlook.Folder folder)
-        {
-            if (folder == null) return;
-            using var frm = new ProjectListForm(Authentication, StorageProvider);
-            var result = frm.ShowDialog();
-
-            if (result != DialogResult.OK) return;
-
-            var sharedFolder = GetSharedFolder(frm.SelectedFolder);
-            if (sharedFolder == null) throw new ArgumentNullException(nameof(sharedFolder), @"No shared folder.");
-
-            ProcessFolder(folder, sharedFolder);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        internal static void NewFolder()
-        {
-            using var frm = new ProjectListForm(Authentication, StorageProvider);
-            var result = frm.ShowDialog();
-
-            if (result != DialogResult.OK) return;
-
-            var _ = GetSharedFolder(frm.SelectedFolder);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="selection"></param>
-        internal static void CopyAttachments(Outlook.AttachmentSelection selection)
-        {
-            MessageBox.Show(@"Not implemented", @"Mail Assistant", MessageBoxButtons.OK, MessageBoxIcon.Information);
-        }
-
+        
         #endregion
 
         #region Event Handlers
@@ -284,186 +188,9 @@ namespace Jpp.AddIn.MailAssistant
             Windows.Remove(window);
         }
 
-        #endregion
-
-        #region Helpers
-
-        private static Outlook.Folder GetSharedFolder(string folderName)
+        private static void MessageProvider_OnErrorOccurred(object sender, EventArgs e)
         {
-            if (string.IsNullOrEmpty(folderName)) throw new ArgumentNullException(nameof(folderName), @"Folder name not set.");
-
-            var sharedFolder = GetFolder(_application.GetNamespace(NAMESPACE_TYPE).Folders, BASE_SHARED_FOLDER_NAME);
-            if (sharedFolder == null) throw new ArgumentNullException(nameof(sharedFolder), @"Base shared folder not set.");
-
-            var arrFolders = folderName.Split('\\');
-            var folder = sharedFolder;
-
-            for (var i = 0; i <= arrFolders.GetUpperBound(0); i++)
-            {
-                if(string.IsNullOrWhiteSpace(arrFolders[i]) || folder.Name == arrFolders[i]) continue;
-
-                var colFolders = folder.Folders;
-                var nextFolder = GetFolder(colFolders, arrFolders[i]) ?? CreateFolder(folder, arrFolders[i]);
-
-                folder = nextFolder;
-            }
-
-            if (folder.Name != arrFolders.Last()) folder.Name = arrFolders.Last();
-
-            return folder;
-        }
-
-        private static Outlook.Folder GetFolder(Outlook.Folders folders, string folderName)
-        {
-            return folders.Cast<Outlook.Folder>().FirstOrDefault(folder => folder.Name == folderName || CheckFolderForCode(folder.Name, folderName));
-        }
-
-        private static bool CheckFolderForCode(string folderName, string matchName)
-        {
-            const string find = "-";
-
-            var charFolderLoc = folderName.IndexOf(find, StringComparison.Ordinal);
-            var charMatchLoc = matchName.IndexOf(find, StringComparison.Ordinal);
-
-            if (charFolderLoc <= 0 || charMatchLoc <= 0) return false;
-            if (charFolderLoc != charMatchLoc) return false;
-
-            return folderName.Substring(0, charFolderLoc) == matchName.Substring(0, charMatchLoc);
-        }
-
-        private static Outlook.Folder CreateFolder(Outlook.Folder rootFolder, string folderName)
-        {
-            return (Outlook.Folder)rootFolder.Folders.Add(folderName, Outlook.OlDefaultFolders.olFolderInbox);
-        }
-
-        private static bool IsDuplicateInFolder(Outlook.Folder folder, Outlook.MailItem mail)
-        {
-            Outlook.Items folderItems = null;
-            Outlook.Items resultItems = null;
-            object item = null;
-
-            try
-            {
-                var dateFrom = mail.SentOn.AddMinutes(-SEARCH_WINDOW_MINUTES).ToString(SEARCH_DATE_FORMAT);
-                var dateTo = mail.SentOn.AddMinutes(SEARCH_WINDOW_MINUTES).ToString(SEARCH_DATE_FORMAT);
-                var mailId = GetMessageId(mail);
-                var restrictCriteria = $"[SentOn] >= '{dateFrom}' And [SentOn] <= '{dateTo}'";
-
-                folderItems = folder.Items;
-                resultItems = folderItems.Restrict(restrictCriteria);
-                item = resultItems.GetFirst();
-                
-                while (item != null)
-                {
-                    if (item is Outlook.MailItem mailItem)
-                    {
-                        if (GetMessageId(mailItem) == mailId) return true;
-                        if (mailItem.ReceivedTime == mail.ReceivedTime && mailItem.Subject == mail.Subject) return true;
-                    }
-
-                    Marshal.ReleaseComObject(item);
-                    item = resultItems.GetNext();
-                }
-
-                return false;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-            finally
-            {
-                if (item != null) Marshal.ReleaseComObject(item);
-                if (folderItems != null) Marshal.ReleaseComObject(folderItems);
-                if (resultItems != null) Marshal.ReleaseComObject(resultItems);
-            }
-        }
-
-        private static string GetMessageId(Outlook.MailItem mail)
-        {
-            try
-            {
-                return mail.PropertyAccessor.GetProperty(PR_INTERNET_MESSAGE_ID) as string;
-            }
-            catch (Exception)
-            {
-                return "";
-            }
-        }
-
-        private static void ProcessFolder(Outlook.Folder folder, Outlook.Folder sharedFolder)
-        {
-            while (folder.Folders.Count > 0)
-            {
-                var child = folder.Folders.GetFirst();
-                if (child is Outlook.Folder childFolder)
-                {
-                    var parentPath = sharedFolder.FullFolderPath;
-                    var childName = childFolder.Name;
-                    var childShared = GetSharedFolder($"{parentPath}\\{childName}");
-                    ProcessFolder(childFolder, childShared);
-                }
-
-                Marshal.ReleaseComObject(child);
-            }
-
-            DoFolderMoveWithModal(progress => DoFolderMove(progress, folder, sharedFolder), folder);
-
-            if (folder.Items.Count == 0) folder.Delete();
-
-            Marshal.ReleaseComObject(folder);
-            Marshal.ReleaseComObject(sharedFolder);
-        }
-
-        private static void DoFolderMove(IProgress<int> progress, Outlook.Folder folder, Outlook.Folder sharedFolder)
-        {
-            var count = 1;
-
-            for (var i = folder.Items.Count; i > 0; i--)
-            {
-                var item = folder.Items[i];
-                progress?.Report(count);
-                switch (item)
-                {
-                    case Outlook.MailItem mailItem:
-                        mailItem.Move(sharedFolder);
-                        break;
-                    case Outlook.MeetingItem meetingItem:
-                        meetingItem.Move(sharedFolder);
-                        break;
-                    case Outlook.ReportItem reportItem:
-                        reportItem.Move(sharedFolder);
-                        break;
-                }
-
-                Marshal.ReleaseComObject(item);
-                count++;
-            }
-        }
-
-        private static void DoFolderMoveWithModal(Action<IProgress<int>> work, Outlook.Folder folder)
-        {
-            var frm = new ProgressForm
-            {
-                progressBar = { Maximum = folder.Items.Count }, 
-                Text = $@"Moving '{folder.Name}'..."
-            };
-
-            frm.Shown += (_, args) =>
-            {
-                var worker = new BackgroundWorker();
-
-                var progress = new Progress<int>(i =>
-                {
-                    frm.progressBar.Value = i;
-                    frm.lblProgress.Text = $@"{frm.progressBar.Value} of {frm.progressBar.Maximum}";
-                });
-                worker.DoWork += (s, workerArgs) => work(progress);
-                worker.RunWorkerCompleted += (s, workerArgs) => frm.Close();
-                worker.RunWorkerAsync();
-            };
-
-            frm.ShowDialog();
+            Authentication = new OfficeAddInOAuth(MessageProvider);
         }
 
         #endregion
@@ -479,7 +206,131 @@ namespace Jpp.AddIn.MailAssistant
             Startup += ThisAddIn_Startup;
             Shutdown += ThisAddIn_Shutdown;
         }
-        
+
+        #endregion
+
+        #region TestingFolderDetails
+        //Code to be re-implemented
+        //private const string PR_CREATION_DATE = "http://schemas.microsoft.com/mapi/proptag/0x30070040";
+        //
+        //internal static void TestingFolderDetails()
+        //{
+        //    const string baseTestFolderName = "Testing";
+        //    string[] testGroupsFolderNames = {"10000-10499","10500-10999","11500-11999","20000-20499","8500-8999","9000-9499","9500-9999"};
+        //    //string[] schemeFolderName = {"20000-", "12000 - 12123", "11000 - 11999", "10000 - 10999", "9508 - 9999", "8810-9507" };
+
+        //    var appFolders = _application.GetNamespace(NAMESPACE_TYPE).Folders;
+        //    var baseSharedFolder = appFolders.Cast<Outlook.Folder>().FirstOrDefault(folder => folder.Name == BASE_SHARED_FOLDER_NAME);
+        //    var baseTestFolder = baseSharedFolder?.Folders.Cast<Outlook.Folder>().FirstOrDefault(folder => folder.Name == baseTestFolderName);
+        //    var baseTestGroupFolders = baseTestFolder?.Folders.Cast<Outlook.Folder>().Where(folder => testGroupsFolderNames.Contains(folder.Name));
+
+        //    if (baseTestGroupFolders == null) return;
+        //    var baseTTestGroupFolderList = baseTestGroupFolders.ToList();
+
+        //    foreach (var testGroupFolder in baseTTestGroupFolderList)
+        //    {
+        //        var detailsList = new List<FolderDetails>();
+
+        //        var testGroupFolders = testGroupFolder.Folders;
+        //        foreach (Outlook.Folder testFolder in testGroupFolders)
+        //        {
+        //            var matched = false;
+
+        //            var testFolderCreated = testFolder.PropertyAccessor.GetProperty(PR_CREATION_DATE) as DateTime?;
+        //            var testFolderName = testFolder.Name;
+        //            var testFolderItems = testFolder.Items.Count;
+        //            var charFolderLoc = testFolderName.IndexOf("-", StringComparison.Ordinal);
+        //            var testCode = testFolderName.Substring(0, charFolderLoc).Trim();
+        //            var testPartCode = new string(testCode.Where(char.IsDigit).ToArray());
+
+        //            if (!matched)
+        //            {
+        //                detailsList.Add(new FolderDetails
+        //                {
+        //                    TestFolderName = testFolderName,
+        //                    TestFolderCreated = testFolderCreated,
+        //                    TestFullCode = testCode,
+        //                    TestPartCode = testPartCode,
+        //                    CodeMatch = matched,
+        //                    TestItemCount = testFolderItems,
+        //                });
+        //            }
+
+        //            Marshal.ReleaseComObject(testFolder);
+        //        }
+
+        //        ExportCsv(detailsList, $"C:\\MailAssistant-AddIn\\{testGroupFolder.Name}.csv");
+
+        //        Marshal.ReleaseComObject(testGroupFolder);
+        //    }
+        //}
+
+        //private static void ExportCsv<T>(List<T> genericList, string fileName)
+        //{
+        //    var sb = new StringBuilder();
+        //    if (!Directory.Exists(Path.GetDirectoryName(fileName))) Directory.CreateDirectory(Path.GetDirectoryName(fileName));
+
+        //    var header = "";
+        //    var info = typeof(T).GetProperties();
+        //    if (!File.Exists(fileName))
+        //    {
+        //        var file = File.Create(fileName);
+        //        file.Close();
+        //        foreach (var prop in typeof(T).GetProperties())
+        //        {
+        //            header += prop.Name + ", ";
+        //        }
+        //        header = header.Substring(0, header.Length - 2);
+        //        sb.AppendLine(header);
+        //        TextWriter swHeaders = new StreamWriter(fileName, true);
+        //        swHeaders.Write(sb.ToString());
+        //        swHeaders.Close();
+
+
+        //        foreach (var obj in genericList)
+        //        {
+        //            sb = new StringBuilder();
+        //            var line = "";
+        //            foreach (var prop in info)
+        //            {
+        //                line += prop.GetValue(obj, null) + ", ";
+        //            }
+        //            line = line.Substring(0, line.Length - 2);
+        //            sb.AppendLine(line);
+        //            TextWriter swLines = new StreamWriter(fileName, true);
+        //            swLines.Write(sb.ToString());
+        //            swLines.Close();
+        //        }
+        //    }
+
+        //}
+
+        //private class FolderDetails
+        //{
+        //    private string _testFolderName;
+        //    private string _matchFolderName;
+
+        //    public string TestFolderName
+        //    {
+        //        get => string.IsNullOrEmpty(_testFolderName)? _testFolderName : $"\"{_testFolderName}\""; 
+        //        set => _testFolderName = value;
+        //    }
+        //    public DateTime? TestFolderCreated { get; set; }
+        //    public string TestFullCode { get; set; }
+        //    public string TestPartCode { get; set; }
+        //    public string MatchFolderName
+        //    {
+        //        get => string.IsNullOrEmpty(_matchFolderName) ? _matchFolderName : $"\"{_matchFolderName}\"";
+        //        set => _matchFolderName = value;
+        //    }
+        //    public string MatchFullCode { get; set; }
+        //    public string MatchPartCode { get; set; }
+        //    public bool CodeMatch { get; set; }
+        //    public int TestItemCount { get; set; }
+        //    public int MatchItemCount { get; set; }
+        //    public bool CountEqual { get; set; }
+        //}
+
         #endregion
     }
 }
