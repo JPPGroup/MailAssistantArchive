@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<customUI onLoad="OnLoad_Ribbon" xmlns="http://schemas.microsoft.com/office/2009/07/customui">
+  <ribbon>
+    <tabs>
+      <tab id="Jpp.MailAssistant.Explorer"
+           label="JPP">
+        <group label="Mail Assistant"
+               id="Jpp.MailAssistant.Explorer.Main">
+          <button id="MoveToShared"
+                  size="large"
+                  label="Move Mail Item To Shared Folder"
+                  screentip="Move Mail Item To Shared Folder"
+                  supertip="Move Mail Item To Shared Folder"
+                  onAction="OnAction_MoveToShared"
+                  getImage="GetImage_MoveToShared"
+                  getVisible="GetVisible_MoveToShared"/>
+          <button id="NewFolder"
+                  size="large"
+                  label="New Shared Folder"
+                  screentip="Create new shared folder"
+                  supertip="Create new shared folder"
+                  onAction="OnAction_NewFolder"
+                  getImage="GetImage_NewFolder"/>
+          <button id="Testing"
+                  size="large"
+                  label="Testing Folder Details"
+                  getImage="GetImage_TestDetails"
+                  onAction="OnAction_TestDetails"/>
+        </group>
+      </tab>
+    </tabs>
+    <contextualTabs>
+      <tabSet idMso="TabSetAttachments">
+        <tab idMso="TabAttachments">
+          <group label="Mail Assistant" id="Jpp.MailAssistant.Attachment">
+            <button id="SendToHub"
+                    size="large"
+                    label="Send Attachment To jHub"
+                    onAction="OnAction_SendToHub"
+                    getImage="GetImage_SendToHub"/>
+          </group>
+        </tab>
+      </tabSet>
+    </contextualTabs>
+  </ribbon>
+  <contextMenus>
+    <contextMenu idMso="ContextMenuMailItem">
+      <button id="MoveToSharedContextMenuMailItem"
+              label="Move Mail Item To Shared Folder"
+              onAction="OnAction_MoveToShared"
+              getImage="GetImage_MoveToShared"
+              getVisible="GetVisible_MoveToShared"/>
+    </contextMenu>
+    <contextMenu idMso="ContextMenuMultipleItems">
+      <button id="MoveToSharedContextMenuMultipleItems"
+              label="Move Mail Items To Shared Folder"
+              onAction="OnAction_MoveToShared"
+              getImage="GetImage_MoveToShared"
+              getVisible="GetVisible_MoveToShared"/>
+    </contextMenu>
+    <contextMenu idMso="ContextMenuAttachments">
+      <button id="SendToHubContextMenuAttachments"
+              label="Send Attachment To jHub"
+              onAction="OnAction_SendToHub" 
+              getImage="GetImage_SendToHub"/>
+    </contextMenu>
+    <contextMenu idMso="ContextMenuFolder">
+      <button id="MoveFolderToSharedFolder" 
+              label="Move Folder To Shared Folder"
+              onAction="OnAction_MoveFolderToSharedFolder"
+              getImage="GetImage_MoveFolderToSharedFolder"/>
+    </contextMenu>
+  </contextMenus>
+</customUI>
+
+

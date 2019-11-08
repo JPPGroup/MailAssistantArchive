@@ -12,7 +12,7 @@ pool:
 variables:
 - group: Cert
 - name: solution
-  value: '**/*.sln'
+  value: '*.sln'
 - name: buildPlatform
   value: 'Any CPU'
 - name: buildConfiguration
